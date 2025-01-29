@@ -1,4 +1,4 @@
-module github.com/gardener/gardener
+module github.com/AleksandarSavchev/gardener
 
 go 1.23.0
 
