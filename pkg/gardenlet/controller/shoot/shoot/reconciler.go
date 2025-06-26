@@ -821,13 +821,16 @@ func (r *Reconciler) patchShootStatusOperationSuccess(
 		})
 	}
 
+	// sasho: go from preparing to prepared status -> go from preparing to completing
 	switch v1beta1helper.GetShootETCDEncryptionKeyRotationPhase(shoot.Status.Credentials) {
 	case gardencorev1beta1.RotationPreparing:
 		v1beta1helper.MutateShootETCDEncryptionKeyRotation(shoot, func(rotation *gardencorev1beta1.ETCDEncryptionKeyRotation) {
-			rotation.Phase = gardencorev1beta1.RotationPrepared
+			// rotation.Phase = gardencorev1beta1.RotationPrepared
+			completeRotationETCDEncryptionKey(shoot, &now)
 			rotation.LastInitiationFinishedTime = &now
 		})
 
+	// sasho: go from completing to completed status
 	case gardencorev1beta1.RotationCompleting:
 		v1beta1helper.MutateShootETCDEncryptionKeyRotation(shoot, func(rotation *gardencorev1beta1.ETCDEncryptionKeyRotation) {
 			rotation.Phase = gardencorev1beta1.RotationCompleted
