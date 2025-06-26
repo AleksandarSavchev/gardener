@@ -293,9 +293,20 @@ func (r *Reconciler) reconcile(ctx context.Context, log logr.Logger, shoot *gard
 		operations = append(operations, fmt.Sprintf("Added %q operation annotation", operation))
 	}
 
-	requirePatch := len(operations) > 0 || kubernetesControlPlaneUpdate != nil || len(workerToKubernetesUpdate) > 0 || len(workerToMachineImageUpdate) > 0
+	requirePatch := len(operations) > 0 || kubernetesControlPlaneUpdate != nil || len(workerToKubernetesUpdate) > 0 || len(workerToMachineImageUpdate) > 0 || shouldETCDEncryptionKeyBeRotated(shoot)
 	if requirePatch {
 		patch := client.MergeFrom(shoot.DeepCopy())
+
+		// start ETCD encryption key rotation if required
+		if shouldETCDEncryptionKeyBeRotated(shoot) {
+			log.Info("ETCD encryption key rotation is required, setting phase to preparing - sasho")
+			v1beta1helper.MutateShootETCDEncryptionKeyRotation(shoot, func(rotation *gardencorev1beta1.ETCDEncryptionKeyRotation) {
+				rotation.Phase = gardencorev1beta1.RotationPreparing
+				rotation.LastInitiationTime = &metav1.Time{Time: r.Clock.Now()}
+				rotation.LastInitiationFinishedTime = nil
+				rotation.LastCompletionTriggeredTime = nil
+			})
+		}
 
 		// make sure to include both successful and failed maintenance operations
 		description, failureReason := buildMaintenanceMessages(
@@ -479,6 +490,7 @@ func maintainOperation(shoot *gardencorev1beta1.Shoot) string {
 		return ""
 	}
 
+	//sasho: maintenance operations
 	switch shoot.Status.LastOperation.State {
 	case gardencorev1beta1.LastOperationStateFailed:
 		if needsRetry(shoot) {
@@ -616,6 +628,12 @@ func maintainKubernetesVersion(log logr.Logger, kubernetesVersion string, autoUp
 		reason:       reason,
 		isSuccessful: true,
 	}, nil
+}
+
+func shouldETCDEncryptionKeyBeRotated(shoot *gardencorev1beta1.Shoot) bool {
+	phase := v1beta1helper.GetShootETCDEncryptionKeyRotationPhase(shoot.Status.Credentials)
+
+	return phase == "" || phase == gardencorev1beta1.RotationCompleted
 }
 
 func determineKubernetesVersion(kubernetesVersion string, profile *gardencorev1beta1.CloudProfile, isExpired bool) (string, error) {
