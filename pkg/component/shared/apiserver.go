@@ -10,7 +10,6 @@ import (
 	"slices"
 	"strings"
 
-	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -25,7 +24,6 @@ import (
 	"github.com/gardener/gardener/pkg/component/apiserver"
 	kubeapiserver "github.com/gardener/gardener/pkg/component/kubernetes/apiserver"
 	gardenerutils "github.com/gardener/gardener/pkg/utils/gardener"
-	"github.com/gardener/gardener/pkg/utils/gardener/secretsrotation"
 )
 
 func computeAPIServerAuditConfig(
@@ -258,22 +256,22 @@ func computeAPIServerETCDEncryptionConfig(
 		EncryptedResources:    encryptedResources,
 	}
 
-	if etcdEncryptionKeyRotationPhase == gardencorev1beta1.RotationPreparing {
-		deployment := &metav1.PartialObjectMetadata{}
-		deployment.SetGroupVersionKind(appsv1.SchemeGroupVersion.WithKind("Deployment"))
-		if err := runtimeClient.Get(ctx, client.ObjectKey{Namespace: runtimeNamespace, Name: deploymentName}, deployment); err != nil {
-			if !apierrors.IsNotFound(err) {
-				return apiserver.ETCDEncryptionConfig{}, err
-			}
-		}
+	// if etcdEncryptionKeyRotationPhase == gardencorev1beta1.RotationPreparing {
+	// 	deployment := &metav1.PartialObjectMetadata{}
+	// 	deployment.SetGroupVersionKind(appsv1.SchemeGroupVersion.WithKind("Deployment"))
+	// 	if err := runtimeClient.Get(ctx, client.ObjectKey{Namespace: runtimeNamespace, Name: deploymentName}, deployment); err != nil {
+	// 		if !apierrors.IsNotFound(err) {
+	// 			return apiserver.ETCDEncryptionConfig{}, err
+	// 		}
+	// 	}
 
-		// If the new encryption key was not yet populated to all replicas then we should still use the old key for
-		// encryption of data. Only if all replicas know the new key we can switch and start encrypting with the new/
-		// current key, see https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/#rotating-a-decryption-key.
-		if !metav1.HasAnnotation(deployment.ObjectMeta, secretsrotation.AnnotationKeyNewEncryptionKeyPopulated) {
-			config.EncryptWithCurrentKey = false
-		}
-	}
+	// 	// If the new encryption key was not yet populated to all replicas then we should still use the old key for
+	// 	// encryption of data. Only if all replicas know the new key we can switch and start encrypting with the new/
+	// 	// current key, see https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/#rotating-a-decryption-key.
+	// 	if !metav1.HasAnnotation(deployment.ObjectMeta, secretsrotation.AnnotationKeyNewEncryptionKeyPopulated) {
+	// 		config.EncryptWithCurrentKey = false
+	// 	}
+	// }
 
 	return config, nil
 }
@@ -287,38 +285,38 @@ func handleETCDEncryptionKeyRotation(
 	etcdEncryptionConfig apiserver.ETCDEncryptionConfig,
 	etcdEncryptionKeyRotationPhase gardencorev1beta1.CredentialsRotationPhase,
 ) error {
-	switch etcdEncryptionKeyRotationPhase {
-	case gardencorev1beta1.RotationPreparing:
-		if !etcdEncryptionConfig.EncryptWithCurrentKey {
-			if err := apiServer.Wait(ctx); err != nil {
-				return err
-			}
+	// switch etcdEncryptionKeyRotationPhase {
+	// case gardencorev1beta1.RotationPreparing:
+	// 	if !etcdEncryptionConfig.EncryptWithCurrentKey {
+	// 		if err := apiServer.Wait(ctx); err != nil {
+	// 			return err
+	// 		}
 
-			// If we have hit this point then we have deployed API server successfully with the configuration option to
-			// still use the old key for the encryption of ETCD data. Now we can mark this step as "completed" (via an
-			// annotation) and redeploy it with the option to use the current/new key for encryption, see
-			// https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/#rotating-a-decryption-key for details.
-			if err := secretsrotation.PatchAPIServerDeploymentMeta(ctx, runtimeClient, runtimeNamespace, deploymentName, func(meta *metav1.PartialObjectMetadata) {
-				metav1.SetMetaDataAnnotation(&meta.ObjectMeta, secretsrotation.AnnotationKeyNewEncryptionKeyPopulated, "true")
-			}); err != nil {
-				return err
-			}
+	// 		// If we have hit this point then we have deployed API server successfully with the configuration option to
+	// 		// still use the old key for the encryption of ETCD data. Now we can mark this step as "completed" (via an
+	// 		// annotation) and redeploy it with the option to use the current/new key for encryption, see
+	// 		// https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/#rotating-a-decryption-key for details.
+	// 		if err := secretsrotation.PatchAPIServerDeploymentMeta(ctx, runtimeClient, runtimeNamespace, deploymentName, func(meta *metav1.PartialObjectMetadata) {
+	// 			metav1.SetMetaDataAnnotation(&meta.ObjectMeta, secretsrotation.AnnotationKeyNewEncryptionKeyPopulated, "true")
+	// 		}); err != nil {
+	// 			return err
+	// 		}
 
-			etcdEncryptionConfig.EncryptWithCurrentKey = true
-			apiServer.SetETCDEncryptionConfig(etcdEncryptionConfig)
+	// 		etcdEncryptionConfig.EncryptWithCurrentKey = true
+	// 		apiServer.SetETCDEncryptionConfig(etcdEncryptionConfig)
 
-			if err := apiServer.Deploy(ctx); err != nil {
-				return err
-			}
-		}
+	// 		if err := apiServer.Deploy(ctx); err != nil {
+	// 			return err
+	// 		}
+	// 	}
 
-	case gardencorev1beta1.RotationCompleting:
-		if err := secretsrotation.PatchAPIServerDeploymentMeta(ctx, runtimeClient, runtimeNamespace, deploymentName, func(meta *metav1.PartialObjectMetadata) {
-			delete(meta.Annotations, secretsrotation.AnnotationKeyNewEncryptionKeyPopulated)
-		}); err != nil {
-			return err
-		}
-	}
+	// case gardencorev1beta1.RotationCompleting:
+	// 	if err := secretsrotation.PatchAPIServerDeploymentMeta(ctx, runtimeClient, runtimeNamespace, deploymentName, func(meta *metav1.PartialObjectMetadata) {
+	// 		delete(meta.Annotations, secretsrotation.AnnotationKeyNewEncryptionKeyPopulated)
+	// 	}); err != nil {
+	// 		return err
+	// 	}
+	// }
 
 	return nil
 }
