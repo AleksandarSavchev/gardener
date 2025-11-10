@@ -202,7 +202,8 @@ The old key is stored in a `Secret` with the name `<shoot-name>.ssh-keypair.old`
 This key is used to encrypt the data of `Secret` resources inside etcd (see [upstream Kubernetes documentation](https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/)).
 
 The encryption key has no expiration date.
-There is no automatic rotation, and **it is the responsibility of the end-user to regularly rotate the encryption key.**
+**Unless automatic credentials rotation is enabled, it is the responsibility of the end-user to regularly rotate those credentials.**
+Refer to [Automatic Credentials Rotation](../shoot/shoot_maintenance.md#automatic-credentials-rotation) for instructions on enabling automatic rotation for etcd encryption key.
 
 The rotation happens in three stages:
 

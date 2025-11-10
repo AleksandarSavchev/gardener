@@ -13528,6 +13528,18 @@ func (m *MaintenanceCredentialsAutoRotation) MarshalToSizedBuffer(dAtA []byte) (
 	_ = i
 	var l int
 	_ = l
+	if m.ETCDEncryptionKey != nil {
+		{
+			size, err := m.ETCDEncryptionKey.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintGenerated(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x1a
+	}
 	if m.SSHKeypair != nil {
 		{
 			size, err := m.SSHKeypair.MarshalToSizedBuffer(dAtA[:i])
@@ -21957,6 +21969,10 @@ func (m *MaintenanceCredentialsAutoRotation) Size() (n int) {
 		l = m.SSHKeypair.Size()
 		n += 1 + l + sovGenerated(uint64(l))
 	}
+	if m.ETCDEncryptionKey != nil {
+		l = m.ETCDEncryptionKey.Size()
+		n += 1 + l + sovGenerated(uint64(l))
+	}
 	return n
 }
 
@@ -25816,6 +25832,7 @@ func (this *MaintenanceCredentialsAutoRotation) String() string {
 	s := strings.Join([]string{`&MaintenanceCredentialsAutoRotation{`,
 		`Observability:` + strings.Replace(this.Observability.String(), "MaintenanceRotationConfig", "MaintenanceRotationConfig", 1) + `,`,
 		`SSHKeypair:` + strings.Replace(this.SSHKeypair.String(), "MaintenanceRotationConfig", "MaintenanceRotationConfig", 1) + `,`,
+		`ETCDEncryptionKey:` + strings.Replace(this.ETCDEncryptionKey.String(), "MaintenanceRotationConfig", "MaintenanceRotationConfig", 1) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -46474,6 +46491,42 @@ func (m *MaintenanceCredentialsAutoRotation) Unmarshal(dAtA []byte) error {
 				m.SSHKeypair = &MaintenanceRotationConfig{}
 			}
 			if err := m.SSHKeypair.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ETCDEncryptionKey", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenerated
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenerated
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenerated
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.ETCDEncryptionKey == nil {
+				m.ETCDEncryptionKey = &MaintenanceRotationConfig{}
+			}
+			if err := m.ETCDEncryptionKey.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
