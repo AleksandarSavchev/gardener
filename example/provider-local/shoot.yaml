@@ -6,7 +6,6 @@ metadata:
   annotations:
     shoot.gardener.cloud/cloud-config-execution-max-delay-seconds: "0"
     authentication.gardener.cloud/issuer: "managed"
-    maintenance.gardener.cloud/operation: "rotate-credentials-start;rotate-ssh-keypair"
 spec:
   cloudProfile:
     name: local
@@ -29,7 +28,7 @@ spec:
       maxSurge: 1
       maxUnavailable: 0
   kubernetes:
-    version: 1.33.0
+    # version: 1.33.0
     kubelet:
       seccompDefault: true
       serializeImagePulls: false
@@ -37,21 +36,21 @@ spec:
       registryBurst: 20
       protectKernelDefaults: true
       streamingConnectionIdleTimeout: 5m
-  maintenance:
-    timeWindow:
-      begin: 110000+0100
-      end: 170000+0100
-    autoUpdate:
-      kubernetesVersion: true
-      machineImageVersion: true
-    autoRotation:
-      credentials:
-        observability:
-          enabled: true
-          rotationPeriod: 30m
-        sshKeypair:
-          enabled: true
-          rotationPeriod: 168h
-        etcdEncryptionKey:
-          enabled: true
-          rotationPeriod: 168h
+  # maintenance:
+  #   timeWindow:
+  #     begin: 110000+0100
+  #     end: 170000+0100
+  #   autoUpdate:
+  #     kubernetesVersion: true
+  #     machineImageVersion: true
+  #   autoRotation:
+  #     credentials:
+  #       observability:
+  #         enabled: true
+  #         rotationPeriod: 30m
+  #       sshKeypair:
+  #         enabled: true
+  #         rotationPeriod: 168h
+  #       etcdEncryptionKey:
+  #         enabled: true
+  #         rotationPeriod: 168h

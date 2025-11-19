@@ -9,22 +9,22 @@ spec:
   region: local
   provider:
     type: local
-  kubernetes:
-    version: 1.33.0
-  maintenance:
-    timeWindow:
-      begin: 110000+0100
-      end: 170000+0100
-    autoUpdate:
-      kubernetesVersion: false
-    autoRotation:
-      credentials:
-        observability:
-          enabled: true
-          rotationPeriod: 30m
-        sshKeypair:
-          enabled: true
-          rotationPeriod: 168h
-        etcdEncryptionKey:
-          enabled: true
-          rotationPeriod: 168h
+  # kubernetes:
+  #   version: 1.33.0
+  # maintenance:
+  #   timeWindow:
+  #     begin: 110000+0100
+  #     end: 170000+0100
+  #   autoUpdate:
+  #     kubernetesVersion: false
+    # autoRotation:
+    #   credentials:
+    #     observability:
+    #       enabled: true
+    #       rotationPeriod: 30m
+    #     sshKeypair:
+    #       enabled: true
+    #       rotationPeriod: 168h
+    #     etcdEncryptionKey:
+    #       enabled: true
+    #       rotationPeriod: 168h
