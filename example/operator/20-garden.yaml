@@ -187,7 +187,7 @@ spec:
     #     - configmaps
     #     - customresource.fancyoperator.io
     #     provider:
-    #       type: "aescbc"
+    #       type: "secretbox"
     #   autoscaling:
     #     minAllowed:
     #       cpu: "1"
@@ -235,7 +235,7 @@ spec:
     #     - shoots.core.gardener.cloud
     #     - managedseeds.seedmanagement.gardener.cloud
     #     provider:
-    #       type: "aescbc"
+    #       type: "secretbox"
     #   requests:
     #     maxNonMutatingInflight: 400
     #     maxMutatingInflight: 200

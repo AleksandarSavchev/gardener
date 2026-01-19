@@ -286,6 +286,39 @@ var _ = Describe("Warnings", func() {
 			Entry("should not return a warning when secretBindingName is not set", nil, BeEmpty()),
 		)
 
+		DescribeTable("aesgcm encryption provider type",
+			func(rotationConfig *core.MaintenanceRotationConfig, providerType *core.EncryptionProviderType, expectedWarning gomegatypes.GomegaMatcher) {
+				shoot.Spec.Maintenance = &core.Maintenance{
+					AutoRotation: &core.MaintenanceAutoRotation{
+						Credentials: &core.MaintenanceCredentialsAutoRotation{
+							ETCDEncryptionKey: rotationConfig,
+						},
+					},
+				}
+				shoot.Spec.Kubernetes.KubeAPIServer = &core.KubeAPIServerConfig{
+					EncryptionConfig: &core.EncryptionConfig{
+						Provider: core.EncryptionProvider{
+							Type: providerType,
+						},
+					},
+				}
+
+				Expect(GetWarnings(ctx, shoot, nil, credentialsRotationInterval)).To(expectedWarning)
+			},
+
+			Entry("should return a warning when encryption provider type is aesgcm and auto rotation is not enabled",
+				nil, ptr.To(core.EncryptionProviderTypeAESGCM),
+				ContainElement(Equal("aesgcm encryption provider type is not recommended to be used without enabling auto encryption key rotation in the maintenance window. For enabling auto rotation, see: https://github.com/gardener/gardener/blob/master/docs/usage/shoot/shoot_maintenance.md#automatic-credentials-rotation"))),
+			Entry("should not return a warning when encryption provider type is aesgcm and auto rotation is enabled",
+				&core.MaintenanceRotationConfig{RotationPeriod: &metav1.Duration{Duration: time.Hour}}, ptr.To(core.EncryptionProviderTypeAESGCM), BeEmpty()),
+			Entry("should not return a warning when encryption provider type is not aesgcm and auto rotation is not enabled",
+				nil, ptr.To(core.EncryptionProviderTypeSecretbox), BeEmpty()),
+			Entry("should not return a warning when encryption provider type is not aesgcm and auto rotation is enabled",
+				&core.MaintenanceRotationConfig{RotationPeriod: &metav1.Duration{Duration: time.Hour}}, ptr.To(core.EncryptionProviderTypeSecretbox), BeEmpty()),
+			Entry("should not return a warning when encryption provider type is not set and auto rotation is not enabled",
+				nil, nil, BeEmpty()),
+		)
+
 		Describe("shoot.spec.cloudProfileName", func() {
 			It("should not return a warning when cloudProfileName is set and the Kubernetes version is < v1.33", func() {
 				shoot.Spec.Kubernetes.Version = "1.32.3"

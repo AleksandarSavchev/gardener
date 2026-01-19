@@ -174,6 +174,8 @@ var (
 
 	availableEncryptionAtRestProviders = sets.New(
 		core.EncryptionProviderTypeAESCBC,
+		core.EncryptionProviderTypeAESGCM,
+		core.EncryptionProviderTypeSecretbox,
 	)
 
 	workerlessErrorMsg = "this field should not be set for workerless Shoot clusters"
@@ -233,6 +235,7 @@ func ValidateShootUpdate(newShoot, oldShoot *core.Shoot) field.ErrorList {
 		oldEncryptionConfig       *core.EncryptionConfig
 		newEncryptionConfig       *core.EncryptionConfig
 		encryptedResources        = sets.New[schema.GroupResource]()
+		encryptionProviderType    = helper.GetEncryptionProviderTypeInStatus(newShoot.Status)
 		hibernationEnabled        = false
 	)
 
@@ -254,7 +257,7 @@ func ValidateShootUpdate(newShoot, oldShoot *core.Shoot) field.ErrorList {
 		}
 	}
 
-	allErrs = append(allErrs, ValidateEncryptionConfigUpdate(newEncryptionConfig, oldEncryptionConfig, encryptedResources, etcdEncryptionKeyRotation, hibernationEnabled, field.NewPath("spec", "kubernetes", "kubeAPIServer", "encryptionConfig"))...)
+	allErrs = append(allErrs, ValidateEncryptionConfigUpdate(newEncryptionConfig, oldEncryptionConfig, encryptedResources, encryptionProviderType, etcdEncryptionKeyRotation, hibernationEnabled, field.NewPath("spec", "kubernetes", "kubeAPIServer", "encryptionConfig"))...)
 	allErrs = append(allErrs, ValidateShootWithOpts(newShoot, opts)...)
 	allErrs = append(allErrs, ValidateShootHAConfigUpdate(newShoot, oldShoot)...)
 	allErrs = append(allErrs, validateHibernationUpdate(newShoot, oldShoot)...)
@@ -708,22 +711,30 @@ func ValidateNodeCIDRMaskWithMaxPod(maxPod int32, nodeCIDRMaskSize int32, networ
 }
 
 // ValidateEncryptionConfigUpdate validates the updates to the KubeAPIServer encryption configuration.
-func ValidateEncryptionConfigUpdate(newConfig, oldConfig *core.EncryptionConfig, currentEncryptedResources sets.Set[schema.GroupResource], etcdEncryptionKeyRotation *core.ETCDEncryptionKeyRotation, isClusterInHibernation bool, fldPath *field.Path) field.ErrorList {
+func ValidateEncryptionConfigUpdate(newConfig, oldConfig *core.EncryptionConfig, currentEncryptedResources sets.Set[schema.GroupResource], currentEncryptionProviderType core.EncryptionProviderType, etcdEncryptionKeyRotation *core.ETCDEncryptionKeyRotation, isClusterInHibernation bool, fldPath *field.Path) field.ErrorList {
 	var (
-		allErrs               = field.ErrorList{}
-		oldEncryptedResources = sets.New[schema.GroupResource]()
-		newEncryptedResources = sets.New[schema.GroupResource]()
+		allErrs                   = field.ErrorList{}
+		oldEncryptedResources     = sets.New[schema.GroupResource]()
+		newEncryptedResources     = sets.New[schema.GroupResource]()
+		oldEncryptionProviderType core.EncryptionProviderType
+		newEncryptionProviderType core.EncryptionProviderType
 	)
 
 	if oldConfig != nil {
 		for _, r := range oldConfig.Resources {
 			oldEncryptedResources.Insert(schema.ParseGroupResource(r))
 		}
+		if oldConfig.Provider.Type != nil && len(*oldConfig.Provider.Type) > 0 {
+			oldEncryptionProviderType = *oldConfig.Provider.Type
+		}
 	}
 
 	if newConfig != nil {
 		for _, r := range newConfig.Resources {
 			newEncryptedResources.Insert(schema.ParseGroupResource(r))
+		}
+		if newConfig.Provider.Type != nil && len(*newConfig.Provider.Type) > 0 {
+			newEncryptionProviderType = *newConfig.Provider.Type
 		}
 	}
 
@@ -732,12 +743,27 @@ func ValidateEncryptionConfigUpdate(newConfig, oldConfig *core.EncryptionConfig,
 			allErrs = append(allErrs, field.Forbidden(fldPath.Child("resources"), fmt.Sprintf("resources cannot be changed when .status.credentials.rotation.etcdEncryptionKey.phase is not %q", string(core.RotationCompleted))))
 		}
 
-		if !oldEncryptedResources.Equal(currentEncryptedResources) {
+		if !oldEncryptedResources.Equal(currentEncryptedResources) || oldEncryptionProviderType != currentEncryptionProviderType {
 			allErrs = append(allErrs, field.Forbidden(fldPath.Child("resources"), "resources cannot be changed because a previous encryption configuration change is currently being rolled out"))
 		}
 
 		if isClusterInHibernation {
 			allErrs = append(allErrs, field.Forbidden(fldPath.Child("resources"), "resources cannot be changed when shoot is in hibernation"))
+		}
+	}
+
+	if newEncryptionProviderType != oldEncryptionProviderType {
+		providerTypePath := fldPath.Child("provider", "type")
+		if etcdEncryptionKeyRotation != nil && etcdEncryptionKeyRotation.Phase != core.RotationCompleted && etcdEncryptionKeyRotation.Phase != "" {
+			allErrs = append(allErrs, field.Forbidden(providerTypePath, fmt.Sprintf("provider type cannot be changed when .status.credentials.rotation.etcdEncryptionKey.phase is not %q", string(core.RotationCompleted))))
+		}
+
+		if !oldEncryptedResources.Equal(currentEncryptedResources) || oldEncryptionProviderType != currentEncryptionProviderType {
+			allErrs = append(allErrs, field.Forbidden(providerTypePath, "provider type cannot be changed because a previous encryption configuration change is currently being rolled out"))
+		}
+
+		if isClusterInHibernation {
+			allErrs = append(allErrs, field.Forbidden(providerTypePath, "provider type cannot be changed when shoot is in hibernation"))
 		}
 	}
 
@@ -1644,8 +1670,8 @@ func validateHibernationUpdate(new, old *core.Shoot) field.ErrorList {
 			}
 		}
 
-		if !encryptedResourcesInOldSpec.Equal(encryptedResourcesInStatus) {
-			allErrs = append(allErrs, field.Forbidden(fldPath, "shoot cannot be hibernated when spec.kubernetes.kubeAPIServer.encryptionConfig.resources and status.credentials.encryptionAtRest.resources are not equal"))
+		if !encryptedResourcesInOldSpec.Equal(encryptedResourcesInStatus) || helper.GetEncryptionProviderType(old.Spec.Kubernetes.KubeAPIServer) != helper.GetEncryptionProviderTypeInStatus(new.Status) {
+			allErrs = append(allErrs, field.Forbidden(fldPath, "shoot cannot be hibernated because an encryption configuration change is currently being rolled out"))
 		}
 	}
 
@@ -3105,7 +3131,8 @@ func validateShootOperation(operations, maintenanceOperations []string, shoot *c
 			(forbiddenShootOperationsWhenHibernated.Has(op) || strings.HasPrefix(op, v1beta1constants.OperationRotateRolloutWorkers) || strings.HasPrefix(op, v1beta1constants.OperationRolloutWorkers)) {
 			allErrs = append(allErrs, field.Forbidden(fldPathOp, fmt.Sprintf("operation '%s' is not permitted when shoot is hibernated or is waking up", op)))
 		}
-		if !encryptedResources.Equal(sets.New(getResourcesForEncryption(shoot.Spec.Kubernetes.KubeAPIServer)...)) &&
+		if (!encryptedResources.Equal(sets.New(getResourcesForEncryption(shoot.Spec.Kubernetes.KubeAPIServer)...)) ||
+			helper.GetEncryptionProviderType(shoot.Spec.Kubernetes.KubeAPIServer) != helper.GetEncryptionProviderTypeInStatus(shoot.Status)) &&
 			forbiddenShootOperationsWhenEncryptionChangeIsRollingOut.Has(op) {
 			allErrs = append(allErrs, field.Forbidden(fldPathOp, fmt.Sprintf("operation '%s' is not permitted because a previous encryption configuration change is currently being rolled out", op)))
 		}
@@ -3122,7 +3149,9 @@ func validateShootOperation(operations, maintenanceOperations []string, shoot *c
 			(forbiddenShootOperationsWhenHibernated.Has(op) || strings.HasPrefix(op, v1beta1constants.OperationRotateRolloutWorkers) || strings.HasPrefix(op, v1beta1constants.OperationRolloutWorkers)) {
 			allErrs = append(allErrs, field.Forbidden(fldPathMaintOp, fmt.Sprintf("operation '%s' is not permitted when shoot is hibernated or is waking up", op)))
 		}
-		if !encryptedResources.Equal(sets.New(getResourcesForEncryption(shoot.Spec.Kubernetes.KubeAPIServer)...)) && forbiddenShootOperationsWhenEncryptionChangeIsRollingOut.Has(op) {
+		if (!encryptedResources.Equal(sets.New(getResourcesForEncryption(shoot.Spec.Kubernetes.KubeAPIServer)...)) ||
+			helper.GetEncryptionProviderType(shoot.Spec.Kubernetes.KubeAPIServer) != helper.GetEncryptionProviderTypeInStatus(shoot.Status)) &&
+			forbiddenShootOperationsWhenEncryptionChangeIsRollingOut.Has(op) {
 			allErrs = append(allErrs, field.Forbidden(fldPathMaintOp, fmt.Sprintf("operation '%s' is not permitted because a previous encryption configuration change is currently being rolled out", op)))
 		}
 	}

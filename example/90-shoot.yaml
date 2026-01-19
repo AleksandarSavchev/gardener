@@ -249,7 +249,7 @@ spec:
   #     - configmaps
   #     - customresource.fancyoperator.io
   #     provider:
-  #       type: "aescbc"
+  #       type: "secretbox"
   #   autoscaling:
   #     minAllowed:
   #       cpu: "1"

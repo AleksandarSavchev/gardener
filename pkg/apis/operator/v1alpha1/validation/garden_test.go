@@ -317,6 +317,29 @@ var _ = Describe("Validation Tests", func() {
 						"Detail": Equal("cannot start rotation of all credentials because a previous encryption configuration change is currently being rolled out"),
 					}))),
 				),
+				Entry("when spec encryption provider type and status encryption provider type are not equal", false,
+					operatorv1alpha1.GardenStatus{
+						Credentials: &operatorv1alpha1.Credentials{
+							EncryptionAtRest: &operatorv1alpha1.EncryptionAtRest{
+								ProviderType: gardencorev1beta1.EncryptionProviderTypeSecretbox,
+							},
+						},
+					},
+					&gardencorev1beta1.EncryptionConfig{
+						Provider: gardencorev1beta1.EncryptionProvider{
+							Type: ptr.To(gardencorev1beta1.EncryptionProviderTypeAESCBC),
+						},
+					}, &gardencorev1beta1.EncryptionConfig{
+						Provider: gardencorev1beta1.EncryptionProvider{
+							Type: ptr.To(gardencorev1beta1.EncryptionProviderTypeAESCBC),
+						},
+					},
+					ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
+						"Type":   Equal(field.ErrorTypeForbidden),
+						"Field":  Equal("metadata.annotations[gardener.cloud/operation]"),
+						"Detail": Equal("cannot start rotation of all credentials because a previous encryption configuration change is currently being rolled out"),
+					}))),
+				),
 				Entry("when spec encrypted resources and status encrypted resources are equal", true,
 					operatorv1alpha1.GardenStatus{
 						Credentials: &operatorv1alpha1.Credentials{
@@ -327,6 +350,24 @@ var _ = Describe("Validation Tests", func() {
 					},
 					&gardencorev1beta1.EncryptionConfig{Resources: []string{"daemonsets.apps", "configmaps"}},
 					&gardencorev1beta1.EncryptionConfig{Resources: []string{"shoots.core.gardener.cloud", "projects.core.gardener.cloud"}},
+				),
+				Entry("when spec encryption provider type and status encryption provider type are equal", true,
+					operatorv1alpha1.GardenStatus{
+						Credentials: &operatorv1alpha1.Credentials{
+							EncryptionAtRest: &operatorv1alpha1.EncryptionAtRest{
+								ProviderType: gardencorev1beta1.EncryptionProviderTypeSecretbox,
+							},
+						},
+					},
+					&gardencorev1beta1.EncryptionConfig{
+						Provider: gardencorev1beta1.EncryptionProvider{
+							Type: ptr.To(gardencorev1beta1.EncryptionProviderTypeSecretbox),
+						},
+					}, &gardencorev1beta1.EncryptionConfig{
+						Provider: gardencorev1beta1.EncryptionProvider{
+							Type: ptr.To(gardencorev1beta1.EncryptionProviderTypeSecretbox),
+						},
+					},
 				),
 			)
 
@@ -920,6 +961,29 @@ var _ = Describe("Validation Tests", func() {
 						"Detail": Equal("cannot start ETCD encryption key rotation because a previous encryption configuration change is currently being rolled out"),
 					}))),
 				),
+				Entry("when spec encryption provider type and status encryption provider type are not equal", false,
+					operatorv1alpha1.GardenStatus{
+						Credentials: &operatorv1alpha1.Credentials{
+							EncryptionAtRest: &operatorv1alpha1.EncryptionAtRest{
+								ProviderType: gardencorev1beta1.EncryptionProviderTypeSecretbox,
+							},
+						},
+					},
+					&gardencorev1beta1.EncryptionConfig{
+						Provider: gardencorev1beta1.EncryptionProvider{
+							Type: ptr.To(gardencorev1beta1.EncryptionProviderTypeAESCBC),
+						},
+					}, &gardencorev1beta1.EncryptionConfig{
+						Provider: gardencorev1beta1.EncryptionProvider{
+							Type: ptr.To(gardencorev1beta1.EncryptionProviderTypeAESCBC),
+						},
+					},
+					ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
+						"Type":   Equal(field.ErrorTypeForbidden),
+						"Field":  Equal("metadata.annotations[gardener.cloud/operation]"),
+						"Detail": Equal("cannot start ETCD encryption key rotation because a previous encryption configuration change is currently being rolled out"),
+					}))),
+				),
 				Entry("when spec encrypted resources and status encrypted resources are equal", true,
 					operatorv1alpha1.GardenStatus{
 						Credentials: &operatorv1alpha1.Credentials{
@@ -930,6 +994,24 @@ var _ = Describe("Validation Tests", func() {
 					},
 					&gardencorev1beta1.EncryptionConfig{Resources: []string{"daemonsets.apps", "configmaps"}},
 					&gardencorev1beta1.EncryptionConfig{Resources: []string{"shoots.core.gardener.cloud", "projects.core.gardener.cloud"}},
+				),
+				Entry("when spec encryption provider type and status encryption provider type are equal", true,
+					operatorv1alpha1.GardenStatus{
+						Credentials: &operatorv1alpha1.Credentials{
+							EncryptionAtRest: &operatorv1alpha1.EncryptionAtRest{
+								ProviderType: gardencorev1beta1.EncryptionProviderTypeSecretbox,
+							},
+						},
+					},
+					&gardencorev1beta1.EncryptionConfig{
+						Provider: gardencorev1beta1.EncryptionProvider{
+							Type: ptr.To(gardencorev1beta1.EncryptionProviderTypeSecretbox),
+						},
+					}, &gardencorev1beta1.EncryptionConfig{
+						Provider: gardencorev1beta1.EncryptionProvider{
+							Type: ptr.To(gardencorev1beta1.EncryptionProviderTypeSecretbox),
+						},
+					},
 				),
 			)
 
@@ -1011,6 +1093,29 @@ var _ = Describe("Validation Tests", func() {
 						"Detail": Equal("cannot start ETCD encryption key rotation because a previous encryption configuration change is currently being rolled out"),
 					}))),
 				),
+				Entry("when spec encryption provider type and status encryption provider type are not equal", false,
+					operatorv1alpha1.GardenStatus{
+						Credentials: &operatorv1alpha1.Credentials{
+							EncryptionAtRest: &operatorv1alpha1.EncryptionAtRest{
+								ProviderType: gardencorev1beta1.EncryptionProviderTypeSecretbox,
+							},
+						},
+					},
+					&gardencorev1beta1.EncryptionConfig{
+						Provider: gardencorev1beta1.EncryptionProvider{
+							Type: ptr.To(gardencorev1beta1.EncryptionProviderTypeAESCBC),
+						},
+					}, &gardencorev1beta1.EncryptionConfig{
+						Provider: gardencorev1beta1.EncryptionProvider{
+							Type: ptr.To(gardencorev1beta1.EncryptionProviderTypeAESCBC),
+						},
+					},
+					ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
+						"Type":   Equal(field.ErrorTypeForbidden),
+						"Field":  Equal("metadata.annotations[gardener.cloud/operation]"),
+						"Detail": Equal("cannot start ETCD encryption key rotation because a previous encryption configuration change is currently being rolled out"),
+					}))),
+				),
 				Entry("when spec encrypted resources and status encrypted resources are equal", true,
 					operatorv1alpha1.GardenStatus{
 						Credentials: &operatorv1alpha1.Credentials{
@@ -1021,6 +1126,24 @@ var _ = Describe("Validation Tests", func() {
 					},
 					&gardencorev1beta1.EncryptionConfig{Resources: []string{"daemonsets.apps", "configmaps"}},
 					&gardencorev1beta1.EncryptionConfig{Resources: []string{"shoots.core.gardener.cloud", "projects.core.gardener.cloud"}},
+				),
+				Entry("when spec encryption provider type and status encryption provider type are equal", true,
+					operatorv1alpha1.GardenStatus{
+						Credentials: &operatorv1alpha1.Credentials{
+							EncryptionAtRest: &operatorv1alpha1.EncryptionAtRest{
+								ProviderType: gardencorev1beta1.EncryptionProviderTypeSecretbox,
+							},
+						},
+					},
+					&gardencorev1beta1.EncryptionConfig{
+						Provider: gardencorev1beta1.EncryptionProvider{
+							Type: ptr.To(gardencorev1beta1.EncryptionProviderTypeSecretbox),
+						},
+					}, &gardencorev1beta1.EncryptionConfig{
+						Provider: gardencorev1beta1.EncryptionProvider{
+							Type: ptr.To(gardencorev1beta1.EncryptionProviderTypeSecretbox),
+						},
+					},
 				),
 			)
 
@@ -3091,6 +3214,123 @@ var _ = Describe("Validation Tests", func() {
 						))
 					})
 
+					It("should deny changing items if the current provider type in the status do not match the current spec", func() {
+						oldResources := []string{"resource.custom.io", "deployments.apps"}
+						oldGardenerResources := []string{"shoots.core.gardener.cloud", "bastions.operations.gardener.cloud"}
+
+						oldGarden.Spec.VirtualCluster.Kubernetes.KubeAPIServer.EncryptionConfig = &gardencorev1beta1.EncryptionConfig{
+							Resources: oldResources,
+							Provider: gardencorev1beta1.EncryptionProvider{
+								Type: ptr.To(gardencorev1beta1.EncryptionProviderTypeSecretbox),
+							},
+						}
+						oldGarden.Spec.VirtualCluster.Gardener = operatorv1alpha1.Gardener{
+							APIServer: &operatorv1alpha1.GardenerAPIServerConfig{
+								EncryptionConfig: &gardencorev1beta1.EncryptionConfig{
+									Resources: oldGardenerResources,
+									Provider: gardencorev1beta1.EncryptionProvider{
+										Type: ptr.To(gardencorev1beta1.EncryptionProviderTypeSecretbox),
+									},
+								},
+							},
+						}
+						newGarden.Status.Credentials.EncryptionAtRest.Resources = append(oldResources, oldGardenerResources...)
+						newGarden.Status.Credentials.EncryptionAtRest.ProviderType = gardencorev1beta1.EncryptionProviderTypeAESGCM
+
+						newGarden.Spec.VirtualCluster.Kubernetes.KubeAPIServer.EncryptionConfig.Resources = []string{"deployments.apps", "newresource.fancyresource.io"}
+						newGarden.Spec.VirtualCluster.Gardener.APIServer.EncryptionConfig.Resources = []string{"shoots.core.gardener.cloud"}
+						newGarden.Spec.VirtualCluster.Kubernetes.KubeAPIServer.EncryptionConfig.Provider.Type = ptr.To(gardencorev1beta1.EncryptionProviderTypeSecretbox)
+						newGarden.Spec.VirtualCluster.Gardener.APIServer.EncryptionConfig.Provider.Type = ptr.To(gardencorev1beta1.EncryptionProviderTypeSecretbox)
+
+						Expect(ValidateGardenUpdate(oldGarden, newGarden, extensions)).To(ConsistOf(
+							PointTo(MatchFields(IgnoreExtras, Fields{
+								"Type":   Equal(field.ErrorTypeForbidden),
+								"Field":  Equal("spec.virtualCluster.kubernetes.kubeAPIServer.encryptionConfig.resources"),
+								"Detail": Equal("resources cannot be changed because a previous encryption configuration change is currently being rolled out"),
+							})),
+							PointTo(MatchFields(IgnoreExtras, Fields{
+								"Type":   Equal(field.ErrorTypeForbidden),
+								"Field":  Equal("spec.virtualCluster.gardener.gardenerAPIServer.encryptionConfig.resources"),
+								"Detail": Equal("resources cannot be changed because a previous encryption configuration change is currently being rolled out"),
+							})),
+						))
+					})
+
+					It("should deny changing provider type if the current resources in the status do not match the current spec", func() {
+						oldResources := []string{"resource.custom.io", "deployments.apps"}
+						oldGardenerResources := []string{"shoots.core.gardener.cloud", "bastions.operations.gardener.cloud"}
+
+						oldGarden.Spec.VirtualCluster.Kubernetes.KubeAPIServer.EncryptionConfig = &gardencorev1beta1.EncryptionConfig{
+							Resources: oldResources,
+							Provider: gardencorev1beta1.EncryptionProvider{
+								Type: ptr.To(gardencorev1beta1.EncryptionProviderTypeSecretbox),
+							},
+						}
+						oldGarden.Spec.VirtualCluster.Gardener = operatorv1alpha1.Gardener{
+							APIServer: &operatorv1alpha1.GardenerAPIServerConfig{
+								EncryptionConfig: &gardencorev1beta1.EncryptionConfig{
+									Resources: oldGardenerResources,
+									Provider: gardencorev1beta1.EncryptionProvider{
+										Type: ptr.To(gardencorev1beta1.EncryptionProviderTypeSecretbox),
+									},
+								},
+							},
+						}
+						newGarden.Status.Credentials.EncryptionAtRest.ProviderType = gardencorev1beta1.EncryptionProviderTypeSecretbox
+
+						newGarden.Spec.VirtualCluster.Kubernetes.KubeAPIServer.EncryptionConfig.Resources = oldResources
+						newGarden.Spec.VirtualCluster.Gardener.APIServer.EncryptionConfig.Resources = oldGardenerResources
+						newGarden.Spec.VirtualCluster.Kubernetes.KubeAPIServer.EncryptionConfig.Provider.Type = ptr.To(gardencorev1beta1.EncryptionProviderTypeAESCBC)
+						newGarden.Spec.VirtualCluster.Gardener.APIServer.EncryptionConfig.Provider.Type = ptr.To(gardencorev1beta1.EncryptionProviderTypeAESCBC)
+
+						Expect(ValidateGardenUpdate(oldGarden, newGarden, extensions)).To(ConsistOf(
+							PointTo(MatchFields(IgnoreExtras, Fields{
+								"Type":   Equal(field.ErrorTypeForbidden),
+								"Field":  Equal("spec.virtualCluster.kubernetes.kubeAPIServer.encryptionConfig.provider.type"),
+								"Detail": Equal("provider type cannot be changed because a previous encryption configuration change is currently being rolled out"),
+							})),
+							PointTo(MatchFields(IgnoreExtras, Fields{
+								"Type":   Equal(field.ErrorTypeForbidden),
+								"Field":  Equal("spec.virtualCluster.gardener.gardenerAPIServer.encryptionConfig.provider.type"),
+								"Detail": Equal("provider type cannot be changed because a previous encryption configuration change is currently being rolled out"),
+							})),
+						))
+					})
+
+					It("should deny changing provider type if the current provider type in the status do not match the current spec", func() {
+						oldGarden.Spec.VirtualCluster.Kubernetes.KubeAPIServer.EncryptionConfig = &gardencorev1beta1.EncryptionConfig{
+							Provider: gardencorev1beta1.EncryptionProvider{
+								Type: ptr.To(gardencorev1beta1.EncryptionProviderTypeSecretbox),
+							},
+						}
+						oldGarden.Spec.VirtualCluster.Gardener = operatorv1alpha1.Gardener{
+							APIServer: &operatorv1alpha1.GardenerAPIServerConfig{
+								EncryptionConfig: &gardencorev1beta1.EncryptionConfig{
+									Provider: gardencorev1beta1.EncryptionProvider{
+										Type: ptr.To(gardencorev1beta1.EncryptionProviderTypeSecretbox),
+									},
+								},
+							},
+						}
+						newGarden.Status.Credentials.EncryptionAtRest.ProviderType = gardencorev1beta1.EncryptionProviderTypeAESGCM
+
+						newGarden.Spec.VirtualCluster.Kubernetes.KubeAPIServer.EncryptionConfig.Provider.Type = ptr.To(gardencorev1beta1.EncryptionProviderTypeAESCBC)
+						newGarden.Spec.VirtualCluster.Gardener.APIServer.EncryptionConfig.Provider.Type = ptr.To(gardencorev1beta1.EncryptionProviderTypeAESCBC)
+
+						Expect(ValidateGardenUpdate(oldGarden, newGarden, extensions)).To(ConsistOf(
+							PointTo(MatchFields(IgnoreExtras, Fields{
+								"Type":   Equal(field.ErrorTypeForbidden),
+								"Field":  Equal("spec.virtualCluster.kubernetes.kubeAPIServer.encryptionConfig.provider.type"),
+								"Detail": Equal("provider type cannot be changed because a previous encryption configuration change is currently being rolled out"),
+							})),
+							PointTo(MatchFields(IgnoreExtras, Fields{
+								"Type":   Equal(field.ErrorTypeForbidden),
+								"Field":  Equal("spec.virtualCluster.gardener.gardenerAPIServer.encryptionConfig.provider.type"),
+								"Detail": Equal("provider type cannot be changed because a previous encryption configuration change is currently being rolled out"),
+							})),
+						))
+					})
+
 					It("should deny changing items during ETCD Encryption Key rotation", func() {
 						oldResources := []string{"resource.custom.io", "deployments.apps"}
 						oldGardenerResources := []string{"shoots.core.gardener.cloud", "bastions.operations.gardener.cloud"}
@@ -3129,23 +3369,72 @@ var _ = Describe("Validation Tests", func() {
 						))
 					})
 
+					It("should deny changing provider type during ETCD Encryption Key rotation", func() {
+						oldGarden.Spec.VirtualCluster.Kubernetes.KubeAPIServer.EncryptionConfig = &gardencorev1beta1.EncryptionConfig{
+							Provider: gardencorev1beta1.EncryptionProvider{
+								Type: ptr.To(gardencorev1beta1.EncryptionProviderTypeSecretbox),
+							},
+						}
+						oldGarden.Spec.VirtualCluster.Gardener = operatorv1alpha1.Gardener{
+							APIServer: &operatorv1alpha1.GardenerAPIServerConfig{
+								EncryptionConfig: &gardencorev1beta1.EncryptionConfig{
+									Provider: gardencorev1beta1.EncryptionProvider{
+										Type: ptr.To(gardencorev1beta1.EncryptionProviderTypeSecretbox),
+									},
+								},
+							},
+						}
+						newGarden.Status.Credentials.EncryptionAtRest.ProviderType = gardencorev1beta1.EncryptionProviderTypeSecretbox
+
+						newGarden.Spec.VirtualCluster.Kubernetes.KubeAPIServer.EncryptionConfig.Provider.Type = ptr.To(gardencorev1beta1.EncryptionProviderTypeAESCBC)
+						newGarden.Spec.VirtualCluster.Gardener.APIServer.EncryptionConfig.Provider.Type = ptr.To(gardencorev1beta1.EncryptionProviderTypeAESCBC)
+
+						newGarden.Status.Credentials.Rotation = &operatorv1alpha1.CredentialsRotation{
+							ETCDEncryptionKey: &gardencorev1beta1.ETCDEncryptionKeyRotation{
+								Phase: gardencorev1beta1.RotationPreparing,
+							},
+						}
+
+						Expect(ValidateGardenUpdate(oldGarden, newGarden, extensions)).To(ConsistOf(
+							PointTo(MatchFields(IgnoreExtras, Fields{
+								"Type":   Equal(field.ErrorTypeForbidden),
+								"Field":  Equal("spec.virtualCluster.kubernetes.kubeAPIServer.encryptionConfig.provider.type"),
+								"Detail": Equal("provider type cannot be changed when .status.credentials.rotation.etcdEncryptionKey.phase is not \"Completed\""),
+							})),
+							PointTo(MatchFields(IgnoreExtras, Fields{
+								"Type":   Equal(field.ErrorTypeForbidden),
+								"Field":  Equal("spec.virtualCluster.gardener.gardenerAPIServer.encryptionConfig.provider.type"),
+								"Detail": Equal("provider type cannot be changed when .status.credentials.rotation.etcdEncryptionKey.phase is not \"Completed\""),
+							})),
+						))
+					})
+
 					It("should allow when there are no changes during ETCD Encryption Key rotation", func() {
 						oldResources := []string{"resource.custom.io", "configmaps"}
 						oldGardenerResources := []string{"shoots.core.gardener.cloud", "bastions.operations.gardener.cloud"}
 						oldGarden.Spec.VirtualCluster.Kubernetes.KubeAPIServer.EncryptionConfig = &gardencorev1beta1.EncryptionConfig{
 							Resources: oldResources,
+							Provider: gardencorev1beta1.EncryptionProvider{
+								Type: ptr.To(gardencorev1beta1.EncryptionProviderTypeSecretbox),
+							},
 						}
 						oldGarden.Spec.VirtualCluster.Gardener = operatorv1alpha1.Gardener{
 							APIServer: &operatorv1alpha1.GardenerAPIServerConfig{
 								EncryptionConfig: &gardencorev1beta1.EncryptionConfig{
 									Resources: oldGardenerResources,
+									Provider: gardencorev1beta1.EncryptionProvider{
+										Type: ptr.To(gardencorev1beta1.EncryptionProviderTypeSecretbox),
+									},
 								},
 							},
 						}
 						newGarden.Status.Credentials.EncryptionAtRest.Resources = append(oldResources, oldGardenerResources...)
+						newGarden.Status.Credentials.EncryptionAtRest.ProviderType = gardencorev1beta1.EncryptionProviderTypeSecretbox
 
 						newGarden.Spec.VirtualCluster.Kubernetes.KubeAPIServer.EncryptionConfig.Resources = []string{"configmaps", "resource.custom.io"}
 						newGarden.Spec.VirtualCluster.Gardener.APIServer.EncryptionConfig.Resources = []string{"shoots.core.gardener.cloud", "bastions.operations.gardener.cloud"}
+						newGarden.Spec.VirtualCluster.Kubernetes.KubeAPIServer.EncryptionConfig.Provider.Type = ptr.To(gardencorev1beta1.EncryptionProviderTypeSecretbox)
+						newGarden.Spec.VirtualCluster.Gardener.APIServer.EncryptionConfig.Provider.Type = ptr.To(gardencorev1beta1.EncryptionProviderTypeSecretbox)
 
 						newGarden.Status.Credentials.Rotation = &operatorv1alpha1.CredentialsRotation{
 							ETCDEncryptionKey: &gardencorev1beta1.ETCDEncryptionKeyRotation{
@@ -3161,18 +3450,27 @@ var _ = Describe("Validation Tests", func() {
 						oldGardenerResources := []string{"shoots.core.gardener.cloud", "bastions.operations.gardener.cloud"}
 						oldGarden.Spec.VirtualCluster.Kubernetes.KubeAPIServer.EncryptionConfig = &gardencorev1beta1.EncryptionConfig{
 							Resources: oldResources,
+							Provider: gardencorev1beta1.EncryptionProvider{
+								Type: ptr.To(gardencorev1beta1.EncryptionProviderTypeSecretbox),
+							},
 						}
 						oldGarden.Spec.VirtualCluster.Gardener = operatorv1alpha1.Gardener{
 							APIServer: &operatorv1alpha1.GardenerAPIServerConfig{
 								EncryptionConfig: &gardencorev1beta1.EncryptionConfig{
 									Resources: oldGardenerResources,
+									Provider: gardencorev1beta1.EncryptionProvider{
+										Type: ptr.To(gardencorev1beta1.EncryptionProviderTypeSecretbox),
+									},
 								},
 							},
 						}
 						newGarden.Status.Credentials.EncryptionAtRest.Resources = append(oldResources, oldGardenerResources...)
+						newGarden.Status.Credentials.EncryptionAtRest.ProviderType = gardencorev1beta1.EncryptionProviderTypeSecretbox
 
 						newGarden.Spec.VirtualCluster.Kubernetes.KubeAPIServer.EncryptionConfig.Resources = []string{"deployments.apps", "newresource.fancyresource.io"}
 						newGarden.Spec.VirtualCluster.Gardener.APIServer.EncryptionConfig.Resources = []string{"shoots.core.gardener.cloud"}
+						newGarden.Spec.VirtualCluster.Kubernetes.KubeAPIServer.EncryptionConfig.Provider.Type = ptr.To(gardencorev1beta1.EncryptionProviderTypeAESCBC)
+						newGarden.Spec.VirtualCluster.Gardener.APIServer.EncryptionConfig.Provider.Type = ptr.To(gardencorev1beta1.EncryptionProviderTypeAESCBC)
 						newGarden.Status.Credentials.Rotation = nil
 
 						Expect(ValidateGardenUpdate(oldGarden, newGarden, extensions)).To(BeEmpty())

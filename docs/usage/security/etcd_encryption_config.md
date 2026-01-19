@@ -16,6 +16,9 @@ The `spec.kubernetes.kubeAPIServer.encryptionConfig` field in the Shoot API allo
 - The `provider` field specifies which provider type is used for encryption.
   - Supported provider types:
     - `aescbc`
+    - `aesgcp`
+    - `secretbox`
+  - The default encryption provider is `secretbox`. Shoot clusters that were created before Gardener `v1.136` have defaulted to the `aescbc` provider.
 
 ## Example Usage in a `Shoot`
 
@@ -29,5 +32,5 @@ spec:
           - statefulsets.apps
           - customresource.fancyoperator.io
         provider:
-          type: "aescbc"
+          type: "secretbox"
 ```

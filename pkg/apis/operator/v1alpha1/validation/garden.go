@@ -723,7 +723,7 @@ func validateOperationContext(operations []string, garden *operatorv1alpha1.Gard
 			if phase := helper.GetWorkloadIdentityKeyRotationPhase(garden.Status.Credentials); len(phase) > 0 && phase != gardencorev1beta1.RotationCompleted {
 				allErrs = append(allErrs, field.Forbidden(fldPath, "cannot start rotation of all credentials if .status.credentials.rotation.workloadIdentityKey.phase is not 'Completed'"))
 			}
-			if !resourcesToEncrypt.Equal(encryptedResources) {
+			if !resourcesToEncrypt.Equal(encryptedResources) || helper.GetEncryptionProviderType(garden.Spec.VirtualCluster.Kubernetes.KubeAPIServer) != helper.GetEncryptionProviderTypeInStatus(garden.Status) {
 				allErrs = append(allErrs, field.Forbidden(fldPath, "cannot start rotation of all credentials because a previous encryption configuration change is currently being rolled out"))
 			}
 		case v1beta1constants.OperationRotateCredentialsComplete:
@@ -780,7 +780,7 @@ func validateOperationContext(operations []string, garden *operatorv1alpha1.Gard
 			if phase := helper.GetETCDEncryptionKeyRotationPhase(garden.Status.Credentials); len(phase) > 0 && phase != gardencorev1beta1.RotationCompleted {
 				allErrs = append(allErrs, field.Forbidden(fldPath, "cannot start ETCD encryption key rotation if .status.credentials.rotation.etcdEncryptionKey.phase is not 'Completed'"))
 			}
-			if !resourcesToEncrypt.Equal(encryptedResources) {
+			if !resourcesToEncrypt.Equal(encryptedResources) || helper.GetEncryptionProviderType(garden.Spec.VirtualCluster.Kubernetes.KubeAPIServer) != helper.GetEncryptionProviderTypeInStatus(garden.Status) {
 				allErrs = append(allErrs, field.Forbidden(fldPath, "cannot start ETCD encryption key rotation because a previous encryption configuration change is currently being rolled out"))
 			}
 		case v1beta1constants.OperationRotateETCDEncryptionKeyComplete:
@@ -822,6 +822,7 @@ func validateEncryptionConfigUpdate(oldGarden, newGarden *operatorv1alpha1.Garde
 		allErrs                              = field.ErrorList{}
 		currentEncryptedKubernetesResources  = sets.New[schema.GroupResource]()
 		currentEncryptedGardenerResources    = sets.New[schema.GroupResource]()
+		currentEncryptionProviderType        = helper.GetEncryptionProviderTypeInStatus(newGarden.Status)
 		oldKubeAPIServerEncryptionConfig     = &gardencore.EncryptionConfig{}
 		newKubeAPIServerEncryptionConfig     = &gardencore.EncryptionConfig{}
 		oldGAPIServerEncryptionConfig        = &gardencore.EncryptionConfig{}
@@ -865,12 +866,12 @@ func validateEncryptionConfigUpdate(oldGarden, newGarden *operatorv1alpha1.Garde
 	for _, r := range utils.FilterEntriesByFilterFn(helper.GetEncryptedResourcesInStatus(newGarden.Status), operator.IsServedByKubeAPIServer) {
 		currentEncryptedKubernetesResources.Insert(schema.ParseGroupResource(r))
 	}
-	allErrs = append(allErrs, gardencorevalidation.ValidateEncryptionConfigUpdate(newKubeAPIServerEncryptionConfig, oldKubeAPIServerEncryptionConfig, currentEncryptedKubernetesResources, etcdEncryptionKeyRotation, false, kubeAPIServerEncryptionConfigFldPath)...)
+	allErrs = append(allErrs, gardencorevalidation.ValidateEncryptionConfigUpdate(newKubeAPIServerEncryptionConfig, oldKubeAPIServerEncryptionConfig, currentEncryptedKubernetesResources, gardencore.EncryptionProviderType(currentEncryptionProviderType), etcdEncryptionKeyRotation, false, kubeAPIServerEncryptionConfigFldPath)...)
 
 	for _, r := range utils.FilterEntriesByFilterFn(helper.GetEncryptedResourcesInStatus(newGarden.Status), operator.IsServedByGardenerAPIServer) {
 		currentEncryptedGardenerResources.Insert(schema.ParseGroupResource(r))
 	}
-	allErrs = append(allErrs, gardencorevalidation.ValidateEncryptionConfigUpdate(newGAPIServerEncryptionConfig, oldGAPIServerEncryptionConfig, currentEncryptedGardenerResources, etcdEncryptionKeyRotation, false, gAPIServerEncryptionConfigFldPath)...)
+	allErrs = append(allErrs, gardencorevalidation.ValidateEncryptionConfigUpdate(newGAPIServerEncryptionConfig, oldGAPIServerEncryptionConfig, currentEncryptedGardenerResources, gardencore.EncryptionProviderType(currentEncryptionProviderType), etcdEncryptionKeyRotation, false, gAPIServerEncryptionConfigFldPath)...)
 
 	return allErrs
 }

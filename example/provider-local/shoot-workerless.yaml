@@ -9,3 +9,8 @@ spec:
   region: local
   provider:
     type: local
+  kubernetes:
+    kubeAPIServer:
+      encryptionConfig:
+       provider:
+         type: "aesgcm"

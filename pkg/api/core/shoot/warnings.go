@@ -63,6 +63,11 @@ func GetWarnings(_ context.Context, shoot, oldShoot *core.Shoot, credentialsRota
 		warnings = append(warnings, "spec.secretBindingName is deprecated and will be disallowed starting with Kubernetes 1.34. For migration instructions, see: https://github.com/gardener/gardener/blob/master/docs/usage/shoot-operations/secretbinding-to-credentialsbinding-migration.md")
 	}
 
+	if helper.GetEncryptionProviderType(shoot.Spec.Kubernetes.KubeAPIServer) == core.EncryptionProviderTypeAESGCM &&
+		!helper.IsETCDEncryptionKeyAutoRotationEnabled(shoot) {
+		warnings = append(warnings, "aesgcm encryption provider type is not recommended to be used without enabling auto encryption key rotation in the maintenance window. For enabling auto rotation, see: https://github.com/gardener/gardener/blob/master/docs/usage/shoot/shoot_maintenance.md#automatic-credentials-rotation")
+	}
+
 	return warnings
 }
 
